@@ -2,7 +2,7 @@ version: '3'
 services:
 
   middleware:
-    image: devaten/devaten-middleware-prometheus:latest
+    image: rahulmore0304/devaten-middleware-prometheus:latest
     build: 
       context: .
       dockerfile: ./Dockerfile
