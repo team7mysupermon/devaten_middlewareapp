@@ -79,7 +79,7 @@ localhost:8999/Start/{Usecase name}/{Application Identifier}
 ### **Accessing metrics**
 
 *Please remember to login before hand. See subsection [Login](#login)*
-Access prometheus dashboard (in browser) on path: http://mymiddelware.localhost:9090/
+Access prometheus dashboard (in browser) on path:http://mymiddelware.localhost:9090/ 
 Access Devaten custom metrics in txt format on path: http://localhost:9091/metrics
 
 ## **Grafana**

@@ -80,7 +80,7 @@ func startRecording(c *gin.Context) {
 	c.JSON(res.StatusCode, gin.H{"Control": "A recording has now started"})
 
 	// Starts the scraping on a seperat thread
-	//go scrapeWithInterval(command)
+	go scrapeWithInterval(command)
 }
 
 // @BasePath /Stop/{Usecase}/{Appiden}
@@ -104,7 +104,7 @@ func stopRecording(c *gin.Context) {
 		return
 	}
 	// Sends true through the quit channel to the goroutine that is scraping the recording
-	//quit <- true
+	quit <- true
 
 	var res = StopRecordingdata(command.Usecase, command.ApplicationIdentifier)
 	c.JSON(res.StatusCode, gin.H{"Control": "A recording has now ended"})
