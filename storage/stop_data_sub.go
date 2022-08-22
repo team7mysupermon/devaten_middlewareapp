@@ -21,12 +21,12 @@ type Stop struct {
 	AlertConfigInfoList         []AlertConfigInfoList `json:"alertConfigInfoList"`
 	AlertCriteriaModel          AlertCriteriaModel    `json:"alertCriteriaModel"`
 	ResponseTime                int                   `json:"responseTime"`
-	MostExecuted                interface{}           `json:"mostExecuted"`
-	WrostExecuted               interface{}           `json:"wrostExecuted"`
+	MostExecuted                []MostExecuted        `json:"mostExecuted"`
+	WrostExecuted               []WrostExecuted       `json:"wrostExecuted"`
 
-	MostExecutedByUsecaseId  interface{} `json:"mostExecutedByUsecaseId"`
-	WrostExecutedByUsecaseId interface{} `json:"wrostExecutedByUsecaseId"`
-	Comparedtimestamp        interface{} `json:"comparedtimestamp"`
+	MostExecutedByUsecaseId  []MostExecutedByUsecaseId  `json:"mostExecutedByUsecaseId"`
+	WrostExecutedByUsecaseId []WrostExecutedByUsecaseId `json:"wrostExecutedByUsecaseId"`
+	Comparedtimestamp        interface{}                `json:"comparedtimestamp"`
 }
 
 type AlertCriteriaModel struct {

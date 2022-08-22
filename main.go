@@ -251,8 +251,59 @@ func StopRecordingdata(usecase string, applicationIdentifier string) *http.Respo
 			StatusCode: 500,
 		}
 	}
-
+	report := gjson.Get(string(body), "reportLink")
+	fmt.Println(report)
+	lastBin := strings.LastIndex(report.String(), "view")
+	fmt.Println(report.String()[lastBin+5 : len(report.String())])
+	reporturl := report.String()[lastBin+5 : len(report.String())]
+	reportdata(reporturl, applicationIdentifier)
 	monitoring.RecordStopMetrics(body)
+
+	return res
+
+}
+
+func reportdata(usecase string, applicationIdentifier string) *http.Response {
+	url := "https://app.devaten.com/userMgt/report/" + usecase
+	method := "GET"
+	// applicationIdentifier1 := applicationIdentifier
+	// applicationIdentifier1 = strings.Replace(applicationIdentifier1, "\n", "", -1)
+
+	payload := strings.NewReader("")
+	fmt.Println(usecase)
+	client := &http.Client{}
+	req, err := http.NewRequest(method, url, payload)
+
+	if err != nil {
+		fmt.Println(err)
+		return &http.Response{
+			Status:     err.Error(),
+			StatusCode: 500,
+		}
+	}
+	req.Header.Add("applicationIdentifier", applicationIdentifier)
+	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("Authorization", "Bearer "+Tokenresponse.AccessToken)
+	res, err := client.Do(req)
+	if err != nil {
+		fmt.Println(err)
+		return &http.Response{
+			Status:     err.Error(),
+			StatusCode: 500,
+		}
+	}
+	defer res.Body.Close()
+	//fmt.Println(res.Body)
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		fmt.Println(err)
+		return &http.Response{
+			Status:     err.Error(),
+			StatusCode: 500,
+		}
+	}
+	//fmt.Println(string(body))
+	monitoring.RecordReport(body)
 
 	return res
 
