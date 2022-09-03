@@ -304,6 +304,7 @@ func tableanalysisdata(idNum string, usecase string, applicationIdentifier strin
 		}
 	}
 	//fmt.Println(string(body))
+	monitoring.TableanalysisReportReg(body)
 	monitoring.TableanalysisReport(body)
 
 	return res
