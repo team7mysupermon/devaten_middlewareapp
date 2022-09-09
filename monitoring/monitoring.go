@@ -42,7 +42,7 @@ func ParseBody(body []byte, action string) {
 	justString := GetPrometheusRegisteredMetrics()
 	if action == "start" {
 		startdataresponse := gjson.Get(string(body), "data.dataSourceList.#.databaseType").Array()
-		databasetype = startdataresponse[0].String()
+		databasetype = strings.ToUpper(startdataresponse[0].String())
 		instanceinfo := gjson.Get(string(body), "data.dataSourceList.#.data").Array()
 
 		go func() {
@@ -104,75 +104,75 @@ func ParseBody(body []byte, action string) {
 }
 func CreateStopMetrics(arr []string) {
 	justString := GetPrometheusRegisteredMetrics()
-	//go func() {
-	for x := 0; x < len(arr); x++ {
+	go func() {
+		for x := 0; x < len(arr); x++ {
 
-		registered2 := strings.Contains(justString, "MOSTEXECUTE_"+strings.ToUpper(arr[x])+"_"+databasetype+"_GAUGE")
+			registered2 := strings.Contains(justString, "MOSTEXECUTE_"+strings.ToUpper(arr[x])+"_"+databasetype+"_GAUGE")
 
-		if !registered2 {
-			mostexecutedmetrics["MOSTEXECUTE_"+strings.ToUpper(arr[x])+"_"+databasetype+"_GAUGE"] = prometheus.NewGaugeVec(
-				prometheus.GaugeOpts{
-					Name: "MOSTEXECUTE_" + strings.ToUpper(arr[x]) + "_" + databasetype + "_GAUGE",
-					Help: "",
-				}, []string{
-					"database",
-					"usecase",
-					"queryid",
-					"startimestamp",
-				},
-			)
-			prometheus.MustRegister(
-				mostexecutedmetrics["MOSTEXECUTE_"+strings.ToUpper(arr[x])+"_"+databasetype+"_GAUGE"],
-			)
-			mostexecutedmetrics["MOSTEXECUTE_"+strings.ToUpper(arr[x])+"_"+databasetype+"_GAUGE"].WithLabelValues("database", "usecase", "queryid", "startimestamp").Set(0)
+			if !registered2 {
+				mostexecutedmetrics["MOSTEXECUTE_"+strings.ToUpper(arr[x])+"_"+databasetype+"_GAUGE"] = prometheus.NewGaugeVec(
+					prometheus.GaugeOpts{
+						Name: "MOSTEXECUTE_" + strings.ToUpper(arr[x]) + "_" + databasetype + "_GAUGE",
+						Help: "",
+					}, []string{
+						"database",
+						"usecase",
+						"queryid",
+						"startimestamp",
+					},
+				)
+				prometheus.MustRegister(
+					mostexecutedmetrics["MOSTEXECUTE_"+strings.ToUpper(arr[x])+"_"+databasetype+"_GAUGE"],
+				)
+				mostexecutedmetrics["MOSTEXECUTE_"+strings.ToUpper(arr[x])+"_"+databasetype+"_GAUGE"].WithLabelValues("database", "usecase", "queryid", "startimestamp").Set(0)
+
+			}
+
+			registered := strings.Contains(justString, "WROSTEXECUTE_"+strings.ToUpper(arr[x])+"_"+databasetype+"_GAUGE")
+
+			if !registered {
+				worstexecutedmetrics["WROSTEXECUTE_"+strings.ToUpper(arr[x])+"_"+databasetype+"_GAUGE"] = prometheus.NewGaugeVec(
+					prometheus.GaugeOpts{
+						Name: "WROSTEXECUTE_" + strings.ToUpper(arr[x]) + "_" + databasetype + "_GAUGE",
+						Help: "",
+					}, []string{
+						"database",
+						"usecase",
+						"queryid",
+						"startimestamp",
+					},
+				)
+				prometheus.MustRegister(
+					worstexecutedmetrics["WROSTEXECUTE_"+strings.ToUpper(arr[x])+"_"+databasetype+"_GAUGE"],
+				)
+				worstexecutedmetrics["WROSTEXECUTE_"+strings.ToUpper(arr[x])+"_"+databasetype+"_GAUGE"].WithLabelValues("database", "usecase", "queryid", "startimestamp").Set(0)
+
+			}
+			registered1 := strings.Contains(justString, "STOP_"+strings.ToUpper(arr[x])+"_"+databasetype+"_GAUGE")
+			fmt.Println(registered1)
+			if !registered1 {
+				stopmetrics["STOP_"+strings.ToUpper(arr[x])+"_"+databasetype+"_GAUGE"] = prometheus.NewGaugeVec(
+					prometheus.GaugeOpts{
+						Name: "STOP_" + strings.ToUpper(arr[x]) + "_" + databasetype + "_GAUGE",
+						Help: "",
+					}, []string{
+						"database",
+						"usecase",
+						"starttimestamp",
+					},
+				)
+				prometheus.MustRegister(
+					stopmetrics["STOP_"+strings.ToUpper(arr[x])+"_"+databasetype+"_GAUGE"],
+				)
+				stopmetrics["STOP_"+strings.ToUpper(arr[x])+"_"+databasetype+"_GAUGE"].WithLabelValues("database", "usecase", "startimestamp").Set(0)
+			}
 
 		}
-
-		registered := strings.Contains(justString, "WROSTEXECUTE_"+strings.ToUpper(arr[x])+"_"+databasetype+"_GAUGE")
-
-		if !registered {
-			worstexecutedmetrics["WROSTEXECUTE_"+strings.ToUpper(arr[x])+"_"+databasetype+"_GAUGE"] = prometheus.NewGaugeVec(
-				prometheus.GaugeOpts{
-					Name: "WROSTEXECUTE_" + strings.ToUpper(arr[x]) + "_" + databasetype + "_GAUGE",
-					Help: "",
-				}, []string{
-					"database",
-					"usecase",
-					"queryid",
-					"startimestamp",
-				},
-			)
-			prometheus.MustRegister(
-				worstexecutedmetrics["WROSTEXECUTE_"+strings.ToUpper(arr[x])+"_"+databasetype+"_GAUGE"],
-			)
-			worstexecutedmetrics["WROSTEXECUTE_"+strings.ToUpper(arr[x])+"_"+databasetype+"_GAUGE"].WithLabelValues("database", "usecase", "queryid", "startimestamp").Set(0)
-
-		}
-		registered1 := strings.Contains(justString, "STOP_"+strings.ToUpper(arr[x])+"_"+databasetype+"_GAUGE")
-
-		if !registered1 {
-			stopmetrics["STOP_"+strings.ToUpper(arr[x])+"_"+databasetype+"_GAUGE"] = prometheus.NewGaugeVec(
-				prometheus.GaugeOpts{
-					Name: "STOP_" + strings.ToUpper(arr[x]) + "_" + databasetype + "_GAUGE",
-					Help: "",
-				}, []string{
-					"database",
-					"usecase",
-					"starttimestamp",
-				},
-			)
-			prometheus.MustRegister(
-				stopmetrics["STOP_"+strings.ToUpper(arr[x])+"_"+databasetype+"_GAUGE"],
-			)
-			stopmetrics["STOP_"+strings.ToUpper(arr[x])+"_"+databasetype+"_GAUGE"].WithLabelValues("database", "usecase", "startimestamp").Set(0)
-		}
-
-	}
-	//}()
+	}()
 
 }
 func RecordStopMetrics(body []byte) {
-	var stopmetrics = GetStopMetricsMap()
+	//stopmetrics := GetStopMetricsMap()
 	value10 := gjson.Get(string(body), "data").Array()
 	for _, v := range value10 {
 		for key, val := range v.Map() {
@@ -196,27 +196,26 @@ func RecordStopMetrics(body []byte) {
 	for key, element := range usecasestopmetrics {
 		myMap := element.(map[string]float64)
 		for columnname, value := range myMap {
-			datav := columnname
-			valuedata := value
-			stopmetrics[datav].WithLabelValues(strings.ToUpper(databasetype), key, starttimestamp).Set(valuedata)
+			stopmetrics[columnname].WithLabelValues(strings.ToUpper(databasetype), key, starttimestamp).Set(value)
 		}
 	}
+
 }
 
-func GetStopMetricsMap() map[string]*prometheus.GaugeVec {
+// func GetStopMetricsMap() map[string]*prometheus.GaugeVec {
 
-	stopmetrics["STOP_SQL_PER_SEC_GAUGE"] = prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Name: "STOP_SQL_PER_SEC_GAUGE",
-			Help: "",
-		}, []string{
-			"databse",
-			"usecase",
-			"starttimestamp",
-		},
-	)
-	return stopmetrics
-}
+// 	stopmetrics["STOP_SQL_PER_SEC_GAUGE"] = prometheus.NewGaugeVec(
+// 		prometheus.GaugeOpts{
+// 			Name: "STOP_SQL_PER_SEC_GAUGE",
+// 			Help: "",
+// 		}, []string{
+// 			"databse",
+// 			"usecase",
+// 			"starttimestamp",
+// 		},
+// 	)
+// 	return stopmetrics
+// }
 func GetPrometheusRegisteredMetrics() string {
 	scientists := []string{
 		"Einstein",
