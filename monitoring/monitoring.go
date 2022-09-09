@@ -149,7 +149,7 @@ func CreateStopMetrics(arr []string) {
 
 			}
 			registered1 := strings.Contains(justString, "STOP_"+strings.ToUpper(arr[x])+"_"+databasetype+"_GAUGE")
-			fmt.Println(registered1)
+
 			if !registered1 {
 				stopmetrics["STOP_"+strings.ToUpper(arr[x])+"_"+databasetype+"_GAUGE"] = prometheus.NewGaugeVec(
 					prometheus.GaugeOpts{
