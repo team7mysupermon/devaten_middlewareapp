@@ -77,7 +77,12 @@ func startRecording(c *gin.Context) {
 	fmt.Println(command.ApplicationIdentifier)
 	PrepareStopMetrics(command.ApplicationIdentifier)
 	var res = Operation(command.Usecase, "start", command.ApplicationIdentifier)
-	c.JSON(res.StatusCode, gin.H{"Control": "A recording has now started"})
+	fmt.Println(res.StatusCode)
+	if res.StatusCode == 200 {
+		c.JSON(res.StatusCode, gin.H{"Control": "A recording has now started"})
+	} else {
+		c.JSON(res.StatusCode, gin.H{"Control": "There is some problem in Start Recording"})
+	}
 
 	// Starts the scraping on a seperat thread
 	go scrapeWithInterval(command)
@@ -107,7 +112,13 @@ func stopRecording(c *gin.Context) {
 	quit <- true
 
 	var res = StopRecordingdata(command.Usecase, command.ApplicationIdentifier)
-	c.JSON(res.StatusCode, gin.H{"Control": "A recording has now ended"})
+	fmt.Println(res.StatusCode)
+	if res.StatusCode == 200 {
+		c.JSON(res.StatusCode, gin.H{"Control": "A recording has now ended"})
+	} else {
+		c.JSON(res.StatusCode, gin.H{"Control": "There is some problem in Stop Recording"})
+	}
+
 }
 
 // @BasePath /Login/{Username}/{Password}
@@ -123,7 +134,7 @@ func stopRecording(c *gin.Context) {
 // @Success 200
 // @Router /Login/{Username}/{Password} [get]
 func getAuthToken(c *gin.Context) {
-	var url = "https://app.devaten.com/oauth/token"
+	var url = "http://localhost:8081/oauth/token"
 	method := "POST"
 
 	// Creates the command structure by taking information from the URL call
@@ -168,7 +179,7 @@ func getAuthToken(c *gin.Context) {
 }
 
 func Operation(usecase string, action string, applicationIdentifier string) *http.Response {
-	url := "https://app.devaten.com/devaten/data/operation?usecaseIdentifier=" + usecase + "&action=" + action
+	url := "http://localhost:8081/devaten/data/operation?usecaseIdentifier=" + usecase + "&action=" + action
 	method := "GET"
 	// applicationIdentifier1 := applicationIdentifier
 	// applicationIdentifier1 = strings.Replace(applicationIdentifier1, "\n", "", -1)
@@ -206,14 +217,18 @@ func Operation(usecase string, action string, applicationIdentifier string) *htt
 			StatusCode: 500,
 		}
 	}
-
-	monitoring.ParseBody(body, action)
+	responsecode := gjson.Get(string(body), "responseCode").Int()
+	if responsecode == 200 {
+		monitoring.ParseBody(body, action)
+	} else {
+		res.StatusCode = 500
+	}
 
 	return res
 
 }
 func StopRecordingdata(usecase string, applicationIdentifier string) *http.Response {
-	url := "https://app.devaten.com/devaten/data/stopRecording?usecaseIdentifier=" + usecase + "&inputSource=application&frocefullyStop=false"
+	url := "http://localhost:8081/devaten/data/stopRecording?usecaseIdentifier=" + usecase + "&inputSource=application&frocefullyStop=false"
 	method := "GET"
 
 	payload := strings.NewReader("")
@@ -231,7 +246,9 @@ func StopRecordingdata(usecase string, applicationIdentifier string) *http.Respo
 	req.Header.Add("applicationIdentifier", applicationIdentifier)
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("Authorization", "Bearer "+Tokenresponse.AccessToken)
+
 	res, err := client.Do(req)
+	fmt.Println(res.StatusCode)
 	if err != nil {
 		fmt.Println(err)
 		return &http.Response{
@@ -239,7 +256,9 @@ func StopRecordingdata(usecase string, applicationIdentifier string) *http.Respo
 			StatusCode: 500,
 		}
 	}
+
 	defer res.Body.Close()
+
 	fmt.Println(res.Body)
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
@@ -249,25 +268,30 @@ func StopRecordingdata(usecase string, applicationIdentifier string) *http.Respo
 			StatusCode: 500,
 		}
 	}
-	report := gjson.Get(string(body), "reportLink")
-	fmt.Println(report)
-	lastBin := strings.LastIndex(report.String(), "view")
+	responsecode := gjson.Get(string(body), "responseCode").Int()
+	if responsecode == 200 {
+		report := gjson.Get(string(body), "reportLink")
+		fmt.Println(report)
+		lastBin := strings.LastIndex(report.String(), "view")
 
-	fmt.Println(report.String()[lastBin+5 : len(report.String())])
-	reporturl := report.String()[lastBin+5 : len(report.String())]
-	monitoring.RecordStopMetrics(body)
-	reportdata(reporturl, applicationIdentifier)
-	idNum := strings.Split(reporturl, "/")
+		fmt.Println(report.String()[lastBin+5 : len(report.String())])
+		reporturl := report.String()[lastBin+5 : len(report.String())]
+		monitoring.RecordStopMetrics(body)
+		reportdata(reporturl, applicationIdentifier)
+		idNum := strings.Split(reporturl, "/")
 
-	fmt.Println(idNum[1])
+		fmt.Println(idNum[1])
 
-	tableanalysisdata(idNum[1], idNum[0], applicationIdentifier)
+		tableanalysisdata(idNum[1], idNum[0], applicationIdentifier)
+	} else {
+		res.StatusCode = 500
+	}
 	return res
 
 }
 
 func tableanalysisdata(idNum string, usecase string, applicationIdentifier string) *http.Response {
-	url := "https://app.devaten.com/userMgt/getTableWiseDetailsInformation?idNum=" + idNum + "&usecaseIdentifier=" + usecase
+	url := "http://localhost:8081/userMgt/getTableWiseDetailsInformation?idNum=" + idNum + "&usecaseIdentifier=" + usecase
 	method := "GET"
 
 	payload := strings.NewReader("")
@@ -304,14 +328,20 @@ func tableanalysisdata(idNum string, usecase string, applicationIdentifier strin
 		}
 	}
 	//fmt.Println(string(body))
-	monitoring.TableanalysisReportReg(body)
-	monitoring.TableanalysisReport(body)
+	responsecode := gjson.Get(string(body), "responseCode").Int()
+
+	if responsecode == 200 {
+		monitoring.TableanalysisReportReg(body)
+		monitoring.TableanalysisReport(body)
+	} else {
+		res.StatusCode = 500
+	}
 
 	return res
 
 }
 func reportdata(usecase string, applicationIdentifier string) *http.Response {
-	url := "https://app.devaten.com/userMgt/report/" + usecase
+	url := "http://localhost:8081/userMgt/report/" + usecase
 	method := "GET"
 	// applicationIdentifier1 := applicationIdentifier
 	// applicationIdentifier1 = strings.Replace(applicationIdentifier1, "\n", "", -1)
@@ -350,14 +380,17 @@ func reportdata(usecase string, applicationIdentifier string) *http.Response {
 		}
 	}
 	//fmt.Println(string(body))
+	//responsecode := gjson.Get(string(body), "responseCode").Int()
+	//if responsecode == 200 {
 	monitoring.RecordReport(body)
+	//}
 
 	return res
 
 }
 func PrepareStopMetrics(applicationIdentifier string) *http.Response {
 	fmt.Println("line no 1")
-	url := "https://app.devaten.com/devaten/data/getAlertConfigInfoByApplicationIdentifier"
+	url := "http://localhost:8081/devaten/data/getAlertConfigInfoByApplicationIdentifier"
 	method := "GET"
 
 	payload := strings.NewReader("")
