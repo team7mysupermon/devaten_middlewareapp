@@ -4,13 +4,15 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
-	"github.com/tidwall/gjson"
-
+	"github.com/joho/godotenv"
 	"github.com/team7mysupermon/devaten_middlewareapp/storage"
+	"github.com/tidwall/gjson"
 
 	"github.com/gin-gonic/gin"
 	"github.com/team7mysupermon/devaten_middlewareapp/monitoring"
@@ -29,6 +31,7 @@ var (
 		Contains the authentication token
 	*/
 	Tokenresponse storage.Token
+	appurl        = ""
 
 	/*
 		Closes the goroutine that scrapes the recording.
@@ -41,15 +44,24 @@ func main() {
 	go monitoring.Monitor()
 	docs.SwaggerInfo.BasePath = ""
 	router := gin.Default()
+	err := godotenv.Load("middleware.env")
 
+	if err != nil {
+		log.Fatalf("Error loading .env file")
+	}
+	apphost := os.Getenv("APP_HOST")
+	appurl = apphost
+	fmt.Println(appurl)
+
+	// getting env variables SITE_TITLE and
 	// The API calls
 	router.GET("/Login/:Username/:Password", getAuthToken)
 	router.GET("/Start/:Usecase/:Appiden", startRecording)
 	router.GET("/Stop/:Usecase/:Appiden", stopRecording)
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
 	// Starts the program
-	err := router.Run(":8999")
-	if err != nil {
+	err1 := router.Run(":8999")
+	if err1 != nil {
 		return
 	}
 }
@@ -136,7 +148,7 @@ func stopRecording(c *gin.Context) {
 // @Success 200
 // @Router /Login/{Username}/{Password} [get]
 func getAuthToken(c *gin.Context) {
-	var url = "http://localhost:8081/oauth/token"
+	var url = "/oauth/token"
 	method := "POST"
 
 	// Creates the command structure by taking information from the URL call
@@ -181,7 +193,7 @@ func getAuthToken(c *gin.Context) {
 }
 
 func Operation(usecase string, action string, applicationIdentifier string) *http.Response {
-	url := "http://localhost:8081/devaten/data/operation?usecaseIdentifier=" + usecase + "&action=" + action
+	url := appurl + "/devaten/data/operation?usecaseIdentifier=" + usecase + "&action=" + action
 	method := "GET"
 	// applicationIdentifier1 := applicationIdentifier
 	// applicationIdentifier1 = strings.Replace(applicationIdentifier1, "\n", "", -1)
@@ -230,7 +242,7 @@ func Operation(usecase string, action string, applicationIdentifier string) *htt
 
 }
 func StopRecordingdata(usecase string, applicationIdentifier string) *http.Response {
-	url := "http://localhost:8081/devaten/data/stopRecording?usecaseIdentifier=" + usecase + "&inputSource=application&frocefullyStop=false"
+	url := appurl + "/devaten/data/stopRecording?usecaseIdentifier=" + usecase + "&inputSource=application&frocefullyStop=false"
 	method := "GET"
 
 	payload := strings.NewReader("")
@@ -294,7 +306,7 @@ func StopRecordingdata(usecase string, applicationIdentifier string) *http.Respo
 }
 
 func tableanalysisdata(idNum string, usecase string, applicationIdentifier string) *http.Response {
-	url := "http://localhost:8081/userMgt/getTableWiseDetailsInformation?idNum=" + idNum + "&usecaseIdentifier=" + usecase
+	url := appurl + "/userMgt/getTableWiseDetailsInformation?idNum=" + idNum + "&usecaseIdentifier=" + usecase
 	method := "GET"
 
 	payload := strings.NewReader("")
@@ -344,7 +356,7 @@ func tableanalysisdata(idNum string, usecase string, applicationIdentifier strin
 
 }
 func reportdata(usecase string, applicationIdentifier string) *http.Response {
-	url := "http://localhost:8081/userMgt/report/" + usecase
+	url := appurl + "/userMgt/report/" + usecase
 	method := "GET"
 	// applicationIdentifier1 := applicationIdentifier
 	// applicationIdentifier1 = strings.Replace(applicationIdentifier1, "\n", "", -1)
@@ -393,7 +405,7 @@ func reportdata(usecase string, applicationIdentifier string) *http.Response {
 }
 func PrepareStopMetrics(applicationIdentifier string) *http.Response {
 	fmt.Println("line no 1")
-	url := "http://localhost:8081/devaten/data/getAlertConfigInfoByApplicationIdentifier"
+	url := appurl + "/devaten/data/getAlertConfigInfoByApplicationIdentifier"
 	method := "GET"
 
 	payload := strings.NewReader("")
