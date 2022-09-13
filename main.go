@@ -32,7 +32,6 @@ var (
 	*/
 	Tokenresponse storage.Token
 	appurl        = ""
-
 	/*
 		Closes the goroutine that scrapes the recording.
 		The goroutine is started when the user starts the recording
@@ -41,9 +40,6 @@ var (
 )
 
 func main() {
-	go monitoring.Monitor()
-	docs.SwaggerInfo.BasePath = ""
-	router := gin.Default()
 	err := godotenv.Load("middleware.env")
 
 	if err != nil {
@@ -52,6 +48,9 @@ func main() {
 	apphost := os.Getenv("APP_HOST")
 	appurl = apphost
 	fmt.Println(appurl)
+	go monitoring.Monitor()
+	docs.SwaggerInfo.BasePath = ""
+	router := gin.Default()
 
 	// getting env variables SITE_TITLE and
 	// The API calls
@@ -148,7 +147,7 @@ func stopRecording(c *gin.Context) {
 // @Success 200
 // @Router /Login/{Username}/{Password} [get]
 func getAuthToken(c *gin.Context) {
-	var url = "/oauth/token"
+	var url = appurl + "/oauth/token"
 	method := "POST"
 
 	// Creates the command structure by taking information from the URL call

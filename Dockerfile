@@ -5,7 +5,7 @@ COPY ./ ./
 
 RUN go mod tidy
 RUN go mod download
-RUN go build -o /devaten-middleware-prometheus-local
+RUN go build -o /devaten-middleware-prometheus
 
 EXPOSE 8999
 EXPOSE 9090

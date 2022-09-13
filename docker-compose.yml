@@ -2,10 +2,13 @@ version: '3'
 services:
 
   middleware:
-    image: rahulmore0304/devaten-middleware-prometheus-local:latest
+    image: rahulmore0304/devaten-middleware-prometheus:latest
     build: 
       context: .
       dockerfile: ./Dockerfile
+    env_file: middleware.env
+    environment:
+      - APP_HOST=${APP_HOST:-http://127.0.0.1:8081}
     container_name: devaten-middleware-prometheus
     depends_on: 
       - prometheus
